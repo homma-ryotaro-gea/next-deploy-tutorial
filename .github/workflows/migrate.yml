@@ -1,0 +1,37 @@
+# GitHub Actions ワークフロー: データベースマイグレーション自動実行
+name: マイグレーション
+
+# トリガー条件: mainブランチへのプッシュ時に実行
+on:
+  push:
+    branches:
+      - main
+
+# 実行するジョブの定義
+jobs:
+  # データベースマイグレーションを適用するジョブ
+  apply_migrations:
+    # Ubuntu環境で実行
+    runs-on: ubuntu-latest
+    
+    # 実行ステップの定義
+    steps:
+      # 1. リポジトリのコードをチェックアウト
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+      # 2. 依存関係とツールをインストール
+      - name: Install dependencies & tooling
+        run: |
+          # pnpmをグローバルにインストール
+          npm install -g pnpm
+          # プロジェクトの依存関係をインストール
+          pnpm install
+          
+      # 3. データベースマイグレーションを実行
+      - name: Apply migrations
+        run: pnpm drizzle:migrate
+        env:
+          # 環境変数としてデータベースURLを設定
+          # GitHub Secretsから安全に取得
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
